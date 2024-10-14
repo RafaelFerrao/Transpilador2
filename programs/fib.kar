@@ -1,0 +1,18 @@
+void main() {
+    newVar float num;
+    newVar float resultado;
+
+    num = readInput();
+
+    resultado = fibonacci(num);
+
+    printOut resultado;
+}
+
+fun float fibonacci(float n) {
+    if ((n == 0) | (n == 1)) then {
+        return n;
+    };
+
+    return (fibonacci((n - 1)) + fibonacci((n - 2)));
+}

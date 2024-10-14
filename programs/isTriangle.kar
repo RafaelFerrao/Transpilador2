@@ -1,0 +1,22 @@
+void main() {
+    newVar float a;
+    newVar float b;
+    newVar float c;
+    newVar boolean resultado;
+
+    a = readInput();
+    b = readInput();
+    c = readInput();
+
+    resultado = isTriangle(a, b, c);
+
+    printOut resultado;
+
+}
+
+fun boolean isTriangle(float a, float b, float c) {
+    if ( ((a<(b+c)) & (b<(a+c))) & (c<(a+b)) ) then {
+        return true;
+    };
+    return false;
+}

@@ -1,0 +1,9 @@
+void main() {
+    newVar float n1;
+    newVar float n2;
+
+    n1 = readInput();
+    n2 = readInput();
+
+    printOut(n1 + n2);
+}

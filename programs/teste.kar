@@ -1,0 +1,7 @@
+void main() {
+    newVar boolean b1;
+
+    b1 = true;
+
+    printOut b1;
+}

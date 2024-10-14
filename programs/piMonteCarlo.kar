@@ -1,0 +1,19 @@
+void main() {
+    newVar float num;
+    newVar float resultado;
+
+
+    num = readInput();
+
+    resultado = fatorial(num);
+
+    printOut resultado;
+}
+
+fun float fatorial(float n) {
+    if ((n == 0) | (n == 1)) then {
+        return 1;
+    };
+
+        return (n * fatorial((n - 1)));
+}

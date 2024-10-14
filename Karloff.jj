@@ -1,0 +1,272 @@
+PARSER_BEGIN(Karloff)
+import java.io.*;
+import ast.*;
+import java.util.ArrayList;
+
+public class Karloff {
+
+  public static void main(String args[]) throws ParseException,IOException {
+    
+ Karloff parser = new Karloff(new FileInputStream(args[0]));
+ Prog arvore = parser.Karloff();
+ arvore.print();
+ arvore.export();
+  }
+
+}
+
+PARSER_END(Karloff)
+
+// Skip whitespace and newline characters
+SKIP: 
+{
+  " " | "\t" | "\n" | "\r"
+}
+
+// Reserved words
+TOKEN: 
+{
+  < MAIN: "main" >
+| < VOID: "void" >
+| < NEWVAR: "newVar" >
+| < FLOAT: "float" >
+| < BOOLEAN: "boolean" >
+| < IF: "if" >
+| < THEN: "then" >
+| < WHILE: "while" >
+| < READ_INPUT: "readInput" >
+| < PRINT_OUTPUT: "printOut" >
+| < RETURN: "return" >
+| < FUN: "fun" >
+| < TRUE: "true" >
+| < FALSE: "false" >
+}
+
+// Operators
+TOKEN: 
+{
+  < ASSIGN: "=" >
+| < PLUS: "+" >
+| < MINUS: "-" >
+| < MULT: "*" >
+| < DIV: "/" >
+| < AND: "&" >
+| < OR: "|" >
+| < LTHAN: "<" >
+| < GTHAN: ">" >
+| < EQUALS: "==" >
+}
+
+// Structure symbols
+TOKEN: 
+{
+  < LBRACE: "{" >
+| < RBRACE: "}" >
+| < LPAR: "(" >
+| < RPAR: ")" >
+| < SEMICOLON: ";" >
+| < COMMA: "," >
+}
+
+// Identifier and number rules
+TOKEN: 
+{
+  < #LETTER: ["a"-"z", "A"-"Z"] >
+| < #DIGIT: ["0"-"9"] >
+| < #DIGITS: (<DIGIT>)+ >
+| < #FRACTION_OPT: ("." <DIGITS>)? >
+| < #EXPONENT_OPT: ("E" ("+"|"-") <DIGITS>)? >
+| < #LETTER_OR_DIGIT: <LETTER> | <DIGIT> >
+| < #UNDERSCORE_END: ("_" <LETTER_OR_DIGIT>)+ >
+}
+
+// Identifier and number tokens
+TOKEN:
+{
+  < ID: <LETTER> (<LETTER_OR_DIGIT>)* (<UNDERSCORE_END>)* >
+| < NUM: <DIGITS> <FRACTION_OPT> <EXPONENT_OPT> >
+}
+
+// KARLOFF -> MAIN FUNC?
+Prog Karloff():
+{Main main; ArrayList<Fun> funs = new ArrayList();}
+{
+  main=Main() (funs=Func())?  
+  
+  <EOF>
+
+{return new Prog(main, funs);}
+}
+
+// MAIN -> "void" "main" "(" ")" "{" VARDECL SEQCOMANDOS "}"
+Main Main():
+{ArrayList<VarDecl> vars = null; ArrayList<Comando> coms = new ArrayList();}
+{
+  <VOID> <MAIN> <LPAR> <RPAR> <LBRACE> vars=VarDecl() coms=SeqCommands() <RBRACE>
+
+{return new Main(vars, coms);}
+}
+
+//VARDECL -> VARDECL "newVar" TIPO TOKEN_id ";" | vazio
+ArrayList<VarDecl> VarDecl():
+{String type; Token var=null; ArrayList<VarDecl> vars = new ArrayList();}
+{
+  (<NEWVAR> type=Type() var=<ID> <SEMICOLON> {vars.add(new VarDecl(type, var.image));})*
+
+  {return vars;}
+}
+
+//TIPO -> "float" | "boolean" | "void"
+String Type():
+{Token type;}
+{
+  (
+    type=<FLOAT> | type=<BOOLEAN> | type=<VOID>
+  )
+{return type.image;}
+}
+
+//SEQCOMANDOS -> (COMANDO)*
+ArrayList<Comando> SeqCommands():
+{ArrayList<Comando> coms = new ArrayList(); Comando c = null;}
+{
+  (c=Command()  {coms.add(c);})*
+  
+  {return coms;}
+}
+
+
+//COMANDO -> TOKEN_id COMANDO'
+//| "if" EXP "then" "{" SEQCOMANDOS "}" ";"
+//| "while" EXP "{" SEQCOMANDOS "}" ";"
+//| "return" EXP ";"
+//| "printOut" EXP ";"
+Comando Command():
+{Token id=null; Exp e=null; Comando c=null; ArrayList<Comando> coms = new ArrayList();}
+{
+  (
+    id=<ID> c=CommandAux1(id.image)
+    { return c; }
+  ) | (
+    <IF> e=Exp() <THEN> <LBRACE> coms=SeqCommands() <RBRACE> <SEMICOLON>
+    { return new CIf(e, coms); }
+  ) | (
+    <WHILE> e=Exp() <LBRACE> coms=SeqCommands() <RBRACE> <SEMICOLON>
+    { return new CWhile(e, coms); }
+  ) | (
+    <RETURN> e=Exp() <SEMICOLON>
+    { return new CReturn(e); }
+  ) | (
+    <PRINT_OUTPUT> e=Exp() <SEMICOLON>
+    { return new CPrint(e); }
+  )
+
+}
+
+//COMANDO' ->  "=" COMANDO''
+//| "(" LISTAEXP? ")" ";"
+Comando CommandAux1(String var):
+{Comando c = null; ArrayList<Exp> args = null;}
+{
+  (
+    <ASSIGN> c = CommandAux2(var)
+    { return c; }
+  ) | ( 
+    <LPAR> (args = ExpList())? <RPAR> <SEMICOLON>
+    { return new CChamadaFun(var, args); }
+  )
+
+} 
+
+//COMANDO'' -> EXP ";"
+//| "readInput" "(" ")" ";"
+Comando CommandAux2(String var):
+{Exp exp = null;}
+{
+  (
+    exp=Exp() <SEMICOLON> 
+    { return new CAtribuicao(var, exp); }
+  ) | (
+    <READ_INPUT> <LPAR> <RPAR> <SEMICOLON>
+    { return new CReadInput(var); }
+  )
+}
+
+Exp Exp():
+{Exp arg1 = null; Exp arg2 = null; String op = null; Exp e = null;}
+{
+  (
+    <LPAR> arg1=Exp() op=Op() arg2=Exp() <RPAR>
+    { return new EOpExp(op, arg1, arg2); }
+  ) | (
+    e=Factor()
+    { return e; }
+  )
+}
+
+Exp Factor():
+{Token id = null; ArrayList<Exp> args = null; Token value = null;}
+{
+  (
+    id=<ID> (<LPAR> (args=ExpList())? <RPAR> { return new EChamadaFun(id.image, args); })?
+    { return new EVar(id.image); }
+  ) | (
+    value=<NUM>
+    { return new EFloat(Float.parseFloat(value.image)); }
+  ) | (
+    <TRUE>
+    { return new ETrue(); }
+  ) | (
+    <FALSE>
+    { return new EFalse(); }
+  )
+}
+
+String Op():
+{}
+{
+  (
+    <PLUS> { return "+"; }
+  ) | (
+    <MINUS> { return "-"; }
+  ) | (
+    <MULT> { return "*"; }
+  ) | (
+    <DIV> { return "/"; }
+  ) | (
+    <AND> { return "&&"; }
+  ) | (
+    <OR> { return "||"; }
+  ) | ( 
+    <LTHAN> { return "<"; }
+  ) | (
+    <GTHAN> { return ">"; }
+  ) | (
+    <EQUALS> { return "=="; }
+  )
+}
+
+ArrayList<Exp> ExpList():
+{ArrayList<Exp> exps = new ArrayList(); Exp e1=null; Exp e2=null;}
+{
+  e1=Exp() {exps.add(e1);} (<COMMA> e2=Exp() {exps.add(e2);})*
+  { return exps; }
+}
+
+ArrayList<Fun> Func():
+{Token nome = null; ArrayList<ParamFormalFun> params = new ArrayList(); String retorno = null; ArrayList<VarDecl> vars = new ArrayList(); ArrayList<Comando> body = new ArrayList();
+ArrayList<Fun> funs = new ArrayList();}
+{
+  (<FUN> retorno=Type() nome=<ID> <LPAR> (params=ArgsList())? <RPAR> <LBRACE> vars=VarDecl() body=SeqCommands() <RBRACE> {funs.add(new Fun(nome.image, params, retorno, vars, body));})+
+  { return funs; }
+}
+
+ArrayList<ParamFormalFun> ArgsList():
+{String type = null; Token id = null; ArrayList<ParamFormalFun> params = new ArrayList();}
+{
+  type=Type() id=<ID> { params.add(new ParamFormalFun(type, id.image)); } (<COMMA> type=Type() id=<ID> { params.add(new ParamFormalFun(type, id.image)); })*
+  { return params; }
+}
+
+
+
