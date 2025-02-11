@@ -12,8 +12,6 @@ public class VarDecl{
    }
 
    public String toString(Integer identation) {
-      // format as a python variable declaration
-      //add identation
       String str = "";
       for (int i = 0; i < identation; i++) {
          str += "\t";

@@ -12,8 +12,6 @@ public class CReadInput extends Comando{
 
 
 	public String toString(Integer identation) {
-		// format as a python read input
-		// add identation when needed
 		String str = "";
 		for (int i = 0; i < identation; i++) {
 			str += "\t";

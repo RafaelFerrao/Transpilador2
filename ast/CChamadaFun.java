@@ -14,8 +14,6 @@ public class CChamadaFun extends Comando{
 
 
 	public String toString(Integer identation) {
-		// format as a python function call
-		// add identation when needed
 		String str = "";
 		for (int i = 0; i < identation; i++) {
 			str += "\t";

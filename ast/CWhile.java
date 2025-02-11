@@ -14,8 +14,6 @@ public class CWhile extends Comando{
 
 
 	public String toString(Integer identation) {
-		// format as a python while
-		// add identation when needed
 		String str = "";
 		for (int i = 0; i < identation; i++) {
 			str += "\t";

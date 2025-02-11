@@ -14,8 +14,6 @@ public class EChamadaFun extends Exp{
 
 	@Override
 	public String toString() {
-		// format as a python function call
-		// add identation when needed
 		String str = "";
 		str += fun + "(";
 		for (int i = 0; i < args.size(); i++) {

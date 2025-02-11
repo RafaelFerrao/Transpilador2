@@ -14,9 +14,6 @@ public class Main{
 	}
 
 	public String toString(Integer identation) {
-
-		// format as a python main
-
 		String str = "";
 		str += "\n";
 		for (VarDecl v : vars) {

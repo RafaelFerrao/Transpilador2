@@ -14,8 +14,6 @@ public class CIf extends Comando{
 
 
 	public String toString(Integer identation) {
-		// format as a python if
-		// add identation when needed
 		String str = "";
 		for (int i = 0; i < identation; i++) {
 			str += "\t";

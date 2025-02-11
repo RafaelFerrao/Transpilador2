@@ -14,8 +14,6 @@ public class CPrint extends Comando{
 
 
 	public String toString(Integer identation) {
-		// format as a python print
-		// add identation when needed
 		String str = "";
 		for (int i = 0; i < identation; i++) {
 			str += "\t";
